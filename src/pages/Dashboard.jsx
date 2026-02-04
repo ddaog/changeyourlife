@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Target, Crosshair, Shield, Plus, MoreHorizontal, Check, Trash2, Calendar, ChevronLeft, ChevronRight, Lightbulb, RefreshCw } from 'lucide-react';
+import { Target, Crosshair, Shield, Plus, MoreHorizontal, Check, Trash2, Calendar, ChevronLeft, ChevronRight, Lightbulb, RefreshCw, Flame } from 'lucide-react';
 import Button from '../components/Button';
 import BottomSheet from '../components/BottomSheet';
 import { Input, TextArea } from '../components/Input';
@@ -139,6 +139,16 @@ const Dashboard = () => {
         bossFight: '',
         dailyLevers: ['', '', ''],
         constraints: ['', '']
+    });
+
+    // Excavation data for "Your Why" widget
+    const [data] = useLocalStorage('life-fix-data', {
+        antiVision5Yr: '',
+        antiVision10Yr: '',
+        costOfInaction: '',
+        vision3Yr: '',
+        newIdentity: '',
+        firstAction: ''
     });
 
     // History storage: { "2026-02-05": [true, false, true], "2026-02-04": [...] }
@@ -294,6 +304,34 @@ const Dashboard = () => {
                     </button>
                 </div>
             </motion.div>
+
+            {/* Your Why Widget */}
+            <Widget
+                title="Your Why"
+                icon={Flame}
+                color="text-warning"
+                onClick={() => window.location.href = '/profile'}
+                className="bg-gradient-to-br from-[#1e1f26] to-[#252630] border border-warning/10"
+            >
+                <div className="space-y-2">
+                    <div>
+                        <p className="text-xs text-warning mb-1">Anti-Vision</p>
+                        <p className="text-sm text-text-secondary line-clamp-2">
+                            {data?.antiVision5Yr || "발굴을 완료하세요"}
+                        </p>
+                    </div>
+                    <div className="h-px bg-white/5" />
+                    <div>
+                        <p className="text-xs text-primary mb-1">Vision</p>
+                        <p className="text-sm text-text-secondary line-clamp-2">
+                            {data?.vision3Yr || "이상적인 미래를 상상하세요"}
+                        </p>
+                    </div>
+                    <button className="text-xs text-warning hover:underline mt-2">
+                        전체 보기 →
+                    </button>
+                </div>
+            </Widget>
 
             <div className="space-y-4">
                 {/* 1. Mission Widget */}

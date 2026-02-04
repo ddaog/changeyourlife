@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Layout from './components/Layout';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 
 const Placeholder = ({ title }) => (
   <div className="flex items-center justify-center h-full">
@@ -17,6 +18,7 @@ function App() {
           <Route index element={<Navigate to="/onboarding" replace />} />
           <Route path="onboarding" element={<Onboarding />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="profile" element={<Profile />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
