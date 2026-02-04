@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* iOS / Toss Dark Mode Palette */
+  --bg-app: #0f1014;
+  /* Deep Slate */
+  --bg-surface: #1e1f26;
+  /* Soft Card Background */
+  --bg-surface-active: #2a2b33;
+
+  --primary: #3182f6;
+  /* Toss Blue */
+  --primary-press: #1b64da;
+
+  --danger: #ef4444;
+  --success: #34c759;
+
+  --text-primary: #ffffff;
+  --text-secondary: #8b95a1;
+  --text-tertiary: #6b7684;
+
+  --border: rgba(255, 255, 255, 0.08);
+
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
+
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-bg-app text-text-primary min-h-screen overflow-x-hidden font-sans;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Typography Utility */
+  .t-h1 {
+    @apply text-[28px] font-bold leading-[1.3] tracking-[-0.5px];
+  }
+
+  .t-h2 {
+    @apply text-[22px] font-semibold leading-[1.35] tracking-[-0.4px];
+  }
+
+  .t-h3 {
+    @apply text-[18px] font-semibold leading-[1.4] tracking-[-0.3px];
+  }
+
+  .t-body {
+    @apply text-[16px] font-normal leading-[1.5] tracking-[-0.2px];
+  }
+
+  .t-sub {
+    @apply text-[14px] font-normal text-text-secondary;
+  }
+
+  .t-caption {
+    @apply text-[12px] font-medium text-text-tertiary;
+  }
+}
+
+/* Glass/Blur Utility */
+.glass {
+  background: rgba(30, 31, 38, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
