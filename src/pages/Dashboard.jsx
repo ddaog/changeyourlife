@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Target, Crosshair, Shield, Plus, MoreHorizontal, Check, Trash2, Calendar, ArrowUp } from 'lucide-react';
+import { Target, Crosshair, Shield, Plus, MoreHorizontal, Check, Trash2, Calendar, ChevronLeft, ChevronRight, Lightbulb, RefreshCw } from 'lucide-react';
 import Button from '../components/Button';
 import BottomSheet from '../components/BottomSheet';
 import { Input, TextArea } from '../components/Input';
@@ -18,6 +18,25 @@ const useLocalStorage = (key, initialValue) => {
 
     return [value, setValue];
 };
+
+// Dan Koe Philosophy Tips
+const TIPS = [
+    "당신의 정체성이 바뀌지 않으면, 행동은 다시 원래대로 돌아갑니다.",
+    "목표를 이루려 하지 마세요. 목표를 이룰 수밖에 없는 사람이 되세요.",
+    "일일 퀘스트는 '재미'가 아니라 '시스템'입니다. 감정에 휘둘리지 마세요.",
+    "보스전(1개월 프로젝트)은 당신의 XP를 획득하는 유일한 방법입니다.",
+    "제약이 있어야 창의성이 생깁니다. 무한한 자유는 마비를 가져옵니다.",
+    "미루는 것은 게으름이 아닙니다. 두려움입니다.",
+    "안티-비전(Anti-Vision)은 당신을 밀어내는 힘, 비전은 당신을 끌어당기는 힘입니다.",
+    "성공한 사람들의 하루는 지루할 정도로 반복적입니다.",
+    "화요일에 무엇을 하는가가 당신의 인생을 결정합니다.",
+    "엔트로피는 자연법칙입니다. 질서는 의도적으로 만들어야 합니다.",
+    "당신이 원하는 삶을 살려면, 그 삶을 사는 사람의 하루를 먼저 살아야 합니다.",
+    "게임이 재미있는 이유: 명확한 목표, 즉각적인 피드백, 적절한 난이도.",
+    "1년 목표는 당신의 북극성입니다. 흔들리지 마세요.",
+    "완벽한 계획보다 불완전한 실행이 낫습니다.",
+    "몰입(Flow)은 도전과 실력이 만나는 지점에서 일어납니다."
+];
 
 const Widget = ({ title, icon: Icon, children, className, onClick, color = "text-white" }) => (
     <motion.div
@@ -110,6 +129,11 @@ const TutorialOverlay = ({ onComplete }) => {
 };
 
 const Dashboard = () => {
+    // Date management
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const dateKey = selectedDate.toISOString().split('T')[0]; // "2026-02-05"
+    const isToday = dateKey === new Date().toISOString().split('T')[0];
+
     const [goals, setGoals] = useLocalStorage('life-fix-goals', {
         mission: '',
         bossFight: '',
@@ -117,61 +141,81 @@ const Dashboard = () => {
         constraints: ['', '']
     });
 
-    const [dailyStatus, setDailyStatus] = useLocalStorage('life-fix-daily-status', {
-        date: new Date().toDateString(),
-        completed: [false, false, false]
-    });
+    // History storage: { "2026-02-05": [true, false, true], "2026-02-04": [...] }
+    const [history, setHistory] = useLocalStorage('life-fix-history', {});
+    const dailyCompleted = history[dateKey] || Array(goals.dailyLevers.length).fill(false);
 
     const [tutorialSeen, setTutorialSeen] = useLocalStorage('life-fix-tutorial', false);
     const [showTutorial, setShowTutorial] = useState(false);
 
-    // Show tutorial only on mount if not seen
+    // Tip system
+    const [currentTipIndex, setCurrentTipIndex] = useState(0);
+
     useEffect(() => {
         if (!tutorialSeen) {
             setShowTutorial(true);
         }
     }, [tutorialSeen]);
 
-    // Sheet State
     const [sheetType, setSheetType] = useState(null);
     const isSheetOpen = !!sheetType;
 
-    // Daily Reset Logic
-    useEffect(() => {
-        if (dailyStatus.date !== new Date().toDateString()) {
-            setDailyStatus({
-                date: new Date().toDateString(),
-                completed: Array(goals.dailyLevers.length).fill(false)
-            });
-        }
-    }, []);
-
     const toggleDaily = (index) => {
-        const newCompleted = [...dailyStatus.completed];
+        if (!isToday) return; // Only allow toggling for today
+
+        const newCompleted = [...dailyCompleted];
         newCompleted[index] = !newCompleted[index];
-        setDailyStatus(prev => ({ ...prev, completed: newCompleted }));
+        setHistory(prev => ({ ...prev, [dateKey]: newCompleted }));
     };
 
     const updateGoal = (field, value) => setGoals(prev => ({ ...prev, [field]: value }));
+
     const updateArrayItem = (field, index, value) => {
         const newArray = [...goals[field]];
         newArray[index] = value;
         setGoals(prev => ({ ...prev, [field]: newArray }));
     };
+
     const removeItem = (field, index) => {
         const newArray = goals[field].filter((_, i) => i !== index);
         setGoals(prev => ({ ...prev, [field]: newArray }));
+
+        // Update all history entries to remove this index
         if (field === 'dailyLevers') {
-            const newCompleted = dailyStatus.completed.filter((_, i) => i !== index);
-            setDailyStatus(prev => ({ ...prev, completed: newCompleted }));
+            const newHistory = {};
+            Object.keys(history).forEach(date => {
+                newHistory[date] = history[date].filter((_, i) => i !== index);
+            });
+            setHistory(newHistory);
         }
     };
+
     const addItem = (field) => {
         setGoals(prev => ({ ...prev, [field]: [...prev[field], ''] }));
+
         if (field === 'dailyLevers') {
-            setDailyStatus(prev => ({ ...prev, completed: [...prev.completed, false] }));
+            // Update all history entries to add a new false entry
+            const newHistory = {};
+            Object.keys(history).forEach(date => {
+                newHistory[date] = [...history[date], false];
+            });
+            setHistory(newHistory);
         }
     };
+
+    const changeDate = (days) => {
+        const newDate = new Date(selectedDate);
+        newDate.setDate(newDate.getDate() + days);
+        setSelectedDate(newDate);
+    };
+
+    const goToToday = () => setSelectedDate(new Date());
+
+    const rotateTip = () => {
+        setCurrentTipIndex((prev) => (prev + 1) % TIPS.length);
+    };
+
+    const completionRate = dailyCompleted.filter(Boolean).length / Math.max(goals.dailyLevers.length, 1);
 
     return (
         <div className="min-h-screen bg-bg-app pb-24 px-4 pt-6 max-w-md mx-auto relative">
@@ -181,10 +225,75 @@ const Dashboard = () => {
                 )}
             </AnimatePresence>
 
-            <header className="mb-8 px-2">
-                <span className="t-sub font-semibold">{new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}</span>
-                <h1 className="t-h1 text-white mt-1">오늘의 전투</h1>
+            {/* Date Navigation Header */}
+            <header className="mb-6 px-2">
+                <div className="flex items-center justify-between mb-4">
+                    <button
+                        onClick={() => changeDate(-1)}
+                        className="p-2 hover:bg-white/5 rounded-full transition-colors"
+                    >
+                        <ChevronLeft size={24} className="text-text-secondary" />
+                    </button>
+
+                    <div className="flex flex-col items-center">
+                        <div className="flex items-center gap-2">
+                            <Calendar size={18} className="text-primary" />
+                            <span className="text-lg font-bold text-white">
+                                {selectedDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
+                            </span>
+                        </div>
+                        {!isToday && (
+                            <button
+                                onClick={goToToday}
+                                className="text-xs text-primary hover:underline mt-1"
+                            >
+                                오늘로 이동
+                            </button>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={() => changeDate(1)}
+                        className="p-2 hover:bg-white/5 rounded-full transition-colors"
+                        disabled={isToday}
+                    >
+                        <ChevronRight size={24} className={isToday ? "text-text-tertiary/30" : "text-text-secondary"} />
+                    </button>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${completionRate * 100}%` }}
+                        className="bg-gradient-to-r from-primary to-success h-full rounded-full"
+                    />
+                </div>
+                <p className="text-xs text-text-tertiary text-center mt-1">
+                    {dailyCompleted.filter(Boolean).length} / {goals.dailyLevers.length} 완료
+                </p>
             </header>
+
+            {/* Tip Card */}
+            <motion.div
+                onClick={rotateTip}
+                whileTap={{ scale: 0.98 }}
+                className="bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 rounded-2xl p-5 mb-6 cursor-pointer"
+            >
+                <div className="flex items-start gap-3">
+                    <div className="p-2 bg-primary/20 rounded-lg">
+                        <Lightbulb size={20} className="text-primary" />
+                    </div>
+                    <div className="flex-1">
+                        <p className="text-sm font-medium text-white/90 leading-relaxed">
+                            {TIPS[currentTipIndex]}
+                        </p>
+                    </div>
+                    <button className="p-1 text-primary/70 hover:text-primary transition-colors">
+                        <RefreshCw size={16} />
+                    </button>
+                </div>
+            </motion.div>
 
             <div className="space-y-4">
                 {/* 1. Mission Widget */}
@@ -232,17 +341,29 @@ const Dashboard = () => {
                             <motion.div
                                 key={i}
                                 initial={false}
-                                animate={{ opacity: dailyStatus.completed[i] ? 0.5 : 1 }}
-                                className="flex items-center gap-3 py-2"
+                                animate={{ opacity: dailyCompleted[i] ? 0.5 : 1 }}
+                                className={clsx(
+                                    "flex items-center gap-3 py-2",
+                                    isToday ? "cursor-pointer" : "cursor-default"
+                                )}
                                 onClick={() => toggleDaily(i)}
                             >
-                                <Checkbox checked={dailyStatus.completed[i]} onToggle={() => toggleDaily(i)} />
-                                <span className={clsx("text-base flex-1", dailyStatus.completed[i] ? "line-through text-text-tertiary" : "text-white")}>
+                                <Checkbox
+                                    checked={dailyCompleted[i]}
+                                    onToggle={() => toggleDaily(i)}
+                                />
+                                <span className={clsx("text-base flex-1", dailyCompleted[i] ? "line-through text-text-tertiary" : "text-white")}>
                                     {lever || "비어있음"}
                                 </span>
                             </motion.div>
                         ))}
                     </div>
+
+                    {!isToday && (
+                        <p className="text-xs text-text-tertiary mt-4 text-center">
+                            과거 기록을 확인 중입니다. 오늘 날짜로 이동하여 수정하세요.
+                        </p>
+                    )}
                 </div>
 
                 {/* 4. Constraints */}
@@ -257,7 +378,7 @@ const Dashboard = () => {
                         {goals.constraints.map((c, i) => (
                             c && <span key={i} className="px-3 py-1 bg-white/5 rounded-lg text-sm text-text-secondary border border-white/5">{c}</span>
                         ))}
-                        {goals.constraints.length === 0 && <span className="text-text-tertiary">제약 조건 없음</span>}
+                        {goals.constraints.filter(c => c).length === 0 && <span className="text-text-tertiary">제약 조건 없음</span>}
                     </div>
                 </Widget>
             </div>
